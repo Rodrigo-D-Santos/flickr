@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Últimas Imagens de Álbuns do Flickr</title>
+</head>
+<body>
+    <h1>Últimas Imagens de Álbuns</h1>
+    <div id="gallery" style="display: flex; flex-wrap: wrap; gap: 20px;"></div>
+    <script>
+        // Sua chave de API do Flickr
+        const apiKey = "264db40986f361cf81bf41787355df42";
+
+        // ID do usuário no Flickr (perfil do Governo do Paraná)
+        const userId = "197912851@N08"; 
+
+        // URL para obter a lista de álbuns
+        const albumsEndpoint = `https://api.flickr.com/services/rest/?method=flickr.photosets.getList&api_key=${apiKey}&user_id=${userId}&format=json&nojsoncallback=1`;
+
+        // Faz a requisição para obter a lista de álbuns
+        fetch(albumsEndpoint)
+            .then(response => response.json())
+            .then(data => {
+                const albums = data.photosets.photoset; // Lista de álbuns
+                const gallery = document.getElementById('gallery');
+
+                // Processa os álbuns (ajustando para exibir apenas os 3 primeiros, se necessário)
+                albums.slice(0, 3).forEach(album => {
+                    // URL para obter as fotos de cada álbum
+                    const albumPhotosEndpoint = `https://api.flickr.com/services/rest/?method=flickr.photosets.getPhotos&api_key=${apiKey}&photoset_id=${album.id}&user_id=${userId}&format=json&nojsoncallback=1`;
+
+                    // Faz a requisição para obter as fotos do álbum
+                    fetch(albumPhotosEndpoint)
+                        .then(response => response.json())
+                        .then(albumData => {
+                            const photos = albumData.photoset.photo; // Fotos do álbum
+
+                            // Obtém a foto mais recente do álbum (última no array)
+                            const latestPhoto = photos[0]; // A mais recente está no início da lista
+                            const imgUrl = `https://live.staticflickr.com/${latestPhoto.server}/${latestPhoto.id}_${latestPhoto.secret}_m.jpg`;
+
+                            // Cria um bloco para o álbum
+                            const albumBlock = document.createElement('div');
+                            albumBlock.style.textAlign = 'center';
+
+                            // Adiciona o título do álbum
+                            const title = document.createElement('h3');
+                            title.textContent = album.title._content;
+                            albumBlock.appendChild(title);
+
+                            // Adiciona a imagem
+                            const img = document.createElement('img');
+                            img.src = imgUrl;
+                            img.alt = latestPhoto.title || "Foto do Flickr";
+                            img.style.width = "300px";
+                            img.style.height = "200px";
+                            img.style.objectFit = "cover";
+                            albumBlock.appendChild(img);
+
+                            // Adiciona o bloco na galeria
+                            gallery.appendChild(albumBlock);
+                        })
+                        .catch(error => console.error(`Erro ao carregar fotos do álbum ${album.id}:`, error));
+                });
+            })
+            .catch(error => console.error('Erro ao carregar álbuns:', error));
+    </script>
+</body>
+</html>
