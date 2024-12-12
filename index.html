@@ -1,70 +1,127 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Últimas Imagens de Álbuns do Flickr</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <title>Últimas Imagens de um Álbum</title>
 </head>
+<style>
+    * {
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .container {
+        margin-top: 100px;
+        width: 1170px;
+    }
+
+    h2.block-title {
+        color: #333333;
+        text-transform: uppercase;
+        border-left: 5px solid #00b0e6;
+        font-size: 1.714em;
+        font-weight: 700;
+        margin: 0 0 30px;
+        padding: 0 0 0 10px;
+        display: inline-block;
+    }
+
+    .section .title__social {
+        background: #ffffff;
+    }
+
+    .logo_flickr {
+        margin-bottom: 5px;
+        margin-left: 919px;
+    }
+
+    .galeria {
+        width: 1140px;
+    }
+
+    .col-md-4 {
+        padding: 0px;
+    }
+
+    .galeria img {
+        padding: 0px;
+        margin: 0 15px;
+        width: 350px;
+        height: 233px;
+        object-fit: cover;
+    }
+</style>
+
 <body>
-    <h1>Últimas Imagens de Álbuns</h1>
-    <div id="gallery" style="display: flex; flex-wrap: wrap; gap: 20px;"></div>
+    <div class="container">
+        <h2 tabindex="0" class="block-title">Fotos</h2>
+        <span class="title__social">
+            <a href="https://www.flickr.com/photos/197912851@N08/" target="_blank" class="social__link" role="link">
+                <img class="logo_flickr" src="Flickr_logo.png" alt="" height="24" width="80">
+            </a>
+        </span>
+        <div class="row galeria" id="gallery"></div>
+    </div>
     <script>
         // Sua chave de API do Flickr
         const apiKey = "264db40986f361cf81bf41787355df42";
 
         // ID do usuário no Flickr (perfil do Governo do Paraná)
-        const userId = "197912851@N08"; 
+        const userId = "197912851@N08";
 
-        // URL para obter a lista de álbuns
-        const albumsEndpoint = `https://api.flickr.com/services/rest/?method=flickr.photosets.getList&api_key=${apiKey}&user_id=${userId}&format=json&nojsoncallback=1`;
+        // ID do álbum específico
+        const albumId = "72177720320780654"; // Substitua por um álbum específico
 
-        // Faz a requisição para obter a lista de álbuns
-        fetch(albumsEndpoint)
+        // URL para obter as fotos do álbum específico
+        const albumPhotosEndpoint = `https://api.flickr.com/services/rest/?method=flickr.photosets.getPhotos&api_key=${apiKey}&photoset_id=${albumId}&user_id=${userId}&format=json&nojsoncallback=1`;
+
+        // Faz a requisição para obter as fotos do álbum
+        fetch(albumPhotosEndpoint)
             .then(response => response.json())
             .then(data => {
-                const albums = data.photosets.photoset; // Lista de álbuns
+                const photos = data.photoset.photo; // Fotos do álbum
                 const gallery = document.getElementById('gallery');
 
-                // Processa os álbuns (ajustando para exibir apenas os 3 primeiros, se necessário)
-                albums.slice(0, 3).forEach(album => {
-                    // URL para obter as fotos de cada álbum
-                    const albumPhotosEndpoint = `https://api.flickr.com/services/rest/?method=flickr.photosets.getPhotos&api_key=${apiKey}&photoset_id=${album.id}&user_id=${userId}&format=json&nojsoncallback=1`;
+                // Exibe as últimas 3 fotos (do mais recente para o mais antigo)
+                photos.slice(0, 3).forEach(photo => {
+                    const imgUrl = `https://live.staticflickr.com/${photo.server}/${photo.id}_${photo.secret}_b.jpg`;
 
-                    // Faz a requisição para obter as fotos do álbum
-                    fetch(albumPhotosEndpoint)
-                        .then(response => response.json())
-                        .then(albumData => {
-                            const photos = albumData.photoset.photo; // Fotos do álbum
+                    // Cria o link para a página da foto no Flickr
+                    const photoLink = `https://www.flickr.com/photos/${userId}/${photo.id}`;
 
-                            // Obtém a foto mais recente do álbum (última no array)
-                            const latestPhoto = photos[0]; // A mais recente está no início da lista
-                            const imgUrl = `https://live.staticflickr.com/${latestPhoto.server}/${latestPhoto.id}_${latestPhoto.secret}_m.jpg`;
+                    // Cria o elemento <div>
+                    const div = document.createElement('div');
+                    div.classList.add('col-md-4'); // Classe Bootstrap
 
-                            // Cria um bloco para o álbum
-                            const albumBlock = document.createElement('div');
-                            albumBlock.style.textAlign = 'center';
+                    // Cria o elemento <a> para o link
+                    const link = document.createElement('a');
+                    link.href = photoLink;
+                    link.target = "_blank"; // Abre o link em uma nova aba
+                    link.rel = "noopener noreferrer"; // Melhora a segurança do link
 
-                            // Adiciona o título do álbum
-                            const title = document.createElement('h3');
-                            title.textContent = album.title._content;
-                            albumBlock.appendChild(title);
+                    // Cria um elemento <img> para exibir cada foto
+                    const img = document.createElement('img');
+                    img.src = imgUrl;
+                    img.alt = photo.title || "Foto do Flickr";
 
-                            // Adiciona a imagem
-                            const img = document.createElement('img');
-                            img.src = imgUrl;
-                            img.alt = latestPhoto.title || "Foto do Flickr";
-                            img.style.width = "300px";
-                            img.style.height = "200px";
-                            img.style.objectFit = "cover";
-                            albumBlock.appendChild(img);
+                    // Adiciona a imagem dentro do link
+                    link.appendChild(img);
 
-                            // Adiciona o bloco na galeria
-                            gallery.appendChild(albumBlock);
-                        })
-                        .catch(error => console.error(`Erro ao carregar fotos do álbum ${album.id}:`, error));
+                    // Adiciona o link dentro da div
+                    div.appendChild(link);
+
+                    // Adiciona a div na galeria
+                    gallery.appendChild(div);
                 });
             })
-            .catch(error => console.error('Erro ao carregar álbuns:', error));
+            .catch(error => console.error('Erro ao carregar fotos do álbum:', error));
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
 </body>
+
 </html>
